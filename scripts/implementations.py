@@ -1,15 +1,11 @@
-
+import numpy as np
 '''
 All functions should return only last_loss,last_w, unlike the labs where we kept track of all iterations in two arrays.
 '''
 
-'''
-Used in 
-'''
-
 def compute_loss(y,tx,w):
     #TODO : Implement loss function (might change often)
-
+    np.conc
     raise NotImplementedError
 
 def compute_gradient(y,tx,w):
