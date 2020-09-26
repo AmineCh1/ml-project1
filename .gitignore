@@ -2,3 +2,6 @@ data/
 latex-example-paper/
 project1_description.pdf
 data_cleaning.ipynb
+scripts/.ipynb_checkpoints/
+scripts/__pycache__/
+
