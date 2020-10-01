@@ -3,8 +3,6 @@ import numpy as np
 All functions should return only last_loss,last_w, unlike the labs
  where we kept track of all iterations in two arrays.
 
- Nevertheless, I think we should still keep track of the intermediate ws 
- and losses for visualization purposes. 
 '''
 
 
@@ -12,12 +10,11 @@ All functions should return only last_loss,last_w, unlike the labs
 def compute_loss_MSE(y,tx,w):
     
     N = len(y)
-    e  = (y -tx@w)
+    e  = y -tx@w
    
     return (1/(2*N))*e.T@e 
 
-    # raise NotImplementedError
-
+    
 def compute_loss_MAE(y,tx,w):
    
     N = len(y)
@@ -25,25 +22,26 @@ def compute_loss_MAE(y,tx,w):
 
     return (1/N)*np.sum(np.abs(e))
 
-    # raise NotImplementedError
+ 
 
 def compute_gradient(y,tx,w):
     #used in GD and SGD
 
     N = len(y)
-    e = (y -tx@w)
+    e = y -tx@w
 
     return (-1/N)*tx.T@e
-    
-    raise NotImplementedError
+
 
 def compute_subgradient(y,tx,w):
     #In case we want to play with non-differentiable functions
-    #TODO : computes gradient for locally non-differentiable functions (i.e |x|)
+    
+    N  = len(y)
+    e = y -tx@w 
+    
+    return (-1/N)*np.sign(e)@tx
 
-    raise NotImplementedError
-
-
+    
 def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
     """
     Generate a minibatch iterator for a dataset.
@@ -72,7 +70,7 @@ def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
         if start_index != end_index:
             yield shuffled_y[start_index:end_index], shuffled_tx[start_index:end_index]
 
-
+            
 def least_squares_GD(y,tx,initial_w, max_iters,gamma):
 
     ws = [initial_w]
@@ -80,6 +78,7 @@ def least_squares_GD(y,tx,initial_w, max_iters,gamma):
     w = initial_w
 
     for iter_ in range(max_iters):
+        
         grad = compute_gradient(y,tx,w)
         loss = compute_loss_MSE(y,tx,w)
         w = w - gamma * grad
@@ -87,13 +86,11 @@ def least_squares_GD(y,tx,initial_w, max_iters,gamma):
         ws.append(w)
         losses.append(loss)
 
-        print("Gradient Descent({bi}/{ti}): loss={l}, w0={w0}, w1={w1}".format(
-              bi=iter_, ti=max_iters - 1, l=loss, w0=w[0], w1=w[1]))
+#         print("Gradient Descent({bi}/{ti}): loss={l}, w0={w0}, w1={w1}".format(
+#               bi=iter_, ti=max_iters - 1, l=loss, w0=w[0], w1=w[1]))
    
     return losses[-1],ws[-1]
 
-
-    # raise NotImplementedError
 
 def least_squares_SGD(y,tx,initial_w, max_iters,gamma):
     
@@ -103,7 +100,7 @@ def least_squares_SGD(y,tx,initial_w, max_iters,gamma):
     batch_size = 1
     for iter_ in range(max_iters):
 
-        grad = [0,0]
+        grad = [0]*tx.shape[1]
         
         for min_batch_y, min_batch_tx in batch_iter(y,tx,batch_size= 1,num_batches = 1):
             grad = grad + compute_gradient(min_batch_y,min_batch_tx,w)
@@ -113,13 +110,11 @@ def least_squares_SGD(y,tx,initial_w, max_iters,gamma):
 
         ws.append(w)
         losses.append(loss)
-
         
+#         print("Gradient Descent({bi}/{ti}): loss={l}".format(
+#               bi=iter_, ti=max_iters - 1, l=loss))
         
-        
-        
-        
-    raise NotImplementedError
+    return losses[-1],ws[-1]
 
 def least_squares(y,tx):
     #TODO : Least squares regression using normal equations
