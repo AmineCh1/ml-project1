@@ -1,46 +1,55 @@
 import numpy as np
 '''
-All functions should return only last_loss,last_w, unlike the labs
- where we kept track of all iterations in two arrays.
+All functions should return only last_loss, last_w, unlike the labs where we
+kept track of all iterations in two arrays.
 
- Nevertheless, I think we should still keep track of the intermediate ws 
- and losses for visualization purposes. 
+TODO: FINAL submission needs to be according to the instructions in the project
+description.
+
+Nevertheless, we keep track of the intermediate w and losses for visualization
+purposes. 
 '''
 
 
 
-def compute_loss_MSE(y,tx,w):
+def compute_loss_MSE(e):
+    """Computes the mean squared error from an error vector."""
+    return 1/2 * np.mean(e**2)
     
-    N = len(y)
-    e  = (y -tx@w)
-   
-    return (1/(2*N))*e.T@e 
-
-    # raise NotImplementedError
-
-def compute_loss_MAE(y,tx,w):
-   
-    N = len(y)
-    e = y - tx@w
-
-    return (1/N)*np.sum(np.abs(e))
-
-    # raise NotImplementedError
-
-def compute_gradient(y,tx,w):
-    #used in GD and SGD
-
-    N = len(y)
-    e = (y -tx@w)
-
-    return (-1/N)*tx.T@e
     
-    raise NotImplementedError
+def compute_loss_MAE(e):
+    """Computes the mean absolute error from an error vector."""
+    return np.mean(np.abs(e))
 
-def compute_subgradient(y,tx,w):
+
+def compute_loss(y, tx, w, function='MSE'):
+    """Calculate the loss.
+    
+    You can calculate the loss using MSE or MAE.
+    """
+    e = y - tx.dot(w)
+    if function == 'MAE':
+        return compute_loss_MAE(e)
+    else:
+        if function != 'MSE':
+            print("Loss function unknown. Switching to MSE but please double
+                  check")
+        return compute_loss_MSE(e)
+
+    
+def compute_gradient(y, tx, w):
+    """Computes the gradient of the weight vector in MSE for linear regression.
+    
+    Returns the error as well as the gradient.
+    """
+    N = len(y)
+    e = y - tx @ w
+    return (-1 / N) * tx.T @ e, e
+
+
+def compute_subgradient(y, tx, w):
     #In case we want to play with non-differentiable functions
     #TODO : computes gradient for locally non-differentiable functions (i.e |x|)
-
     raise NotImplementedError
 
 
@@ -53,12 +62,8 @@ def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
     Example of use :
     for minibatch_y, minibatch_tx in batch_iter(y, tx, 32):
         <DO-SOMETHING>
-
-    ATTENTION : COPIED FROM PROVIDED FUNCTIONS IN LAB 02 . Don't know 
-    if this is okay ....
     """
     data_size = len(y)
-
     if shuffle:
         shuffle_indices = np.random.permutation(np.arange(data_size))
         shuffled_y = y[shuffle_indices]
@@ -73,71 +78,72 @@ def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
             yield shuffled_y[start_index:end_index], shuffled_tx[start_index:end_index]
 
 
-def least_squares_GD(y,tx,initial_w, max_iters,gamma):
-
-    ws = [initial_w]
-    losses = []
-    w = initial_w
-
-    for iter_ in range(max_iters):
-        grad = compute_gradient(y,tx,w)
-        loss = compute_loss_MSE(y,tx,w)
-        w = w - gamma * grad
-
-        ws.append(w)
-        losses.append(loss)
-
-        print("Gradient Descent({bi}/{ti}): loss={l}, w0={w0}, w1={w1}".format(
-              bi=iter_, ti=max_iters - 1, l=loss, w0=w[0], w1=w[1]))
-   
-    return losses[-1],ws[-1]
-
-
-    # raise NotImplementedError
-
-def least_squares_SGD(y,tx,initial_w, max_iters,gamma):
+def least_squares_GD(y, tx, initial_w, max_iters, gamma):
+    """Computes a least squares model using gradient descent.
     
+    Args:
+        y: A numpy array representing the output variable.
+        tx: A numpy array representing the transpose matrix of input variable X.
+        initial_w: A numpy array representing the weights of each feature.
+        max_iters: An integer specifying the maximum number of iterations for
+            convergence.
+        gamma: A float number greater than 0 used as a learning rate.
+        
+    Returns:
+        A tuple with intermediate losses and weights respectively.
+    """
     ws = [initial_w]
     losses = []
     w = initial_w
-    batch_size = 1
     for iter_ in range(max_iters):
-
-        grad = [0,0]
-        
-        for min_batch_y, min_batch_tx in batch_iter(y,tx,batch_size= 1,num_batches = 1):
-            grad = grad + compute_gradient(min_batch_y,min_batch_tx,w)
-        loss = compute_loss_MSE(y,tx,w)
-
-        w = w - (gamma*grad)
-
+        grad, e = compute_gradient(y, tx, w)
+        loss = compute_loss_MSE(e)
+        w = w - gamma * grad
         ws.append(w)
         losses.append(loss)
+        # Logging
+        print(f"Gradient Descent({iter_}/{max_iters - 1}): loss={loss}, w={w}")
+    return losses[-1], ws[-1]
 
-        
-        
-        
-        
-        
-    raise NotImplementedError
+
+def least_squares_SGD(y, tx, initial_w, max_iters, gamma):
+    """Computes a least squares model using stochastic gradient descent."""
+    ws = [initial_w]
+    losses = []
+    w = initial_w
+    for iter_ in range(max_iters):
+        # This for loop has one iteration.
+        for min_batch_y, min_batch_tx in batch_iter(y, tx, batch_size=1, num_batches=1):
+            grad, e = compute_gradient(min_batch_y, min_batch_tx, w)
+            loss = compute_loss_MSE(e)
+            w = w - gamma * grad
+            ws.append(w)
+            losses.append(loss)
+            # Logging
+            print(f"SGD({iter_}/{max_iters - 1}): loss={loss}, w={w}")
+    return losses[-1], ws[-1]
+
 
 def least_squares(y,tx):
-    #TODO : Least squares regression using normal equations
-    
-    raise NotImplementedError
+    """Calculate the least squares using the normal equations."""
+    a = tx.T @ tx
+    b = tx.T @ y
+    w = np.linalg.solve(a, b)
+    loss = compute_loss(y, tx, w)
+    return loss, w
 
+                  
 def ridge_regression(y,tx,lambda_):
     #TODO : Ridge regression using normal equations
-
     raise NotImplementedError
 
+                  
 def logistic_regression(y,tx,initial_w,max_iters,gamma):
     #TODO : Logistic regression using gradient descent or SGD
-
     raise NotImplementedError
 
+                  
 def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
     #TODO : Regularized logistic regression using gradient descent 
     #or SGD
-
     raise NotImplementedError
