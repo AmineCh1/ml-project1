@@ -16,12 +16,12 @@ def compute_loss_MSE(e):
     """Computes the mean squared error from an error vector."""
     return 1/2 * np.mean(e**2)
     
-    
+
 def compute_loss_MAE(e):
     """Computes the mean absolute error from an error vector."""
     return np.mean(np.abs(e))
 
-
+    
 def compute_loss(y, tx, w, function='MSE'):
     """Calculate the loss.
     
@@ -32,8 +32,7 @@ def compute_loss(y, tx, w, function='MSE'):
         return compute_loss_MAE(e)
     else:
         if function != 'MSE':
-            print("Loss function unknown. Switching to MSE but please double
-                  check")
+            print("Loss function unknown. Switching to MSE but please double check")
         return compute_loss_MSE(e)
 
     
@@ -49,10 +48,11 @@ def compute_gradient(y, tx, w):
 
 def compute_subgradient(y, tx, w):
     #In case we want to play with non-differentiable functions
-    #TODO : computes gradient for locally non-differentiable functions (i.e |x|)
-    raise NotImplementedError
+    N  = len(y)
+    e = y -tx@w 
+    return (-1/N)*np.sign(e)@tx
 
-
+    
 def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
     """
     Generate a minibatch iterator for a dataset.
@@ -78,7 +78,7 @@ def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
             yield shuffled_y[start_index:end_index], shuffled_tx[start_index:end_index]
 
 
-def least_squares_GD(y, tx, initial_w, max_iters, gamma):
+def least_squares_GD(y, tx, initial_w, max_iters, gamma, logging=False):
     """Computes a least squares model using gradient descent.
     
     Args:
@@ -88,6 +88,7 @@ def least_squares_GD(y, tx, initial_w, max_iters, gamma):
         max_iters: An integer specifying the maximum number of iterations for
             convergence.
         gamma: A float number greater than 0 used as a learning rate.
+        logging: A boolean to print logs or not.
         
     Returns:
         A tuple with intermediate losses and weights respectively.
@@ -101,12 +102,12 @@ def least_squares_GD(y, tx, initial_w, max_iters, gamma):
         w = w - gamma * grad
         ws.append(w)
         losses.append(loss)
-        # Logging
-        print(f"Gradient Descent({iter_}/{max_iters - 1}): loss={loss}, w={w}")
+        if logging:
+            print(f"Gradient Descent({iter_}/{max_iters - 1}): loss={loss}, w={w}")
     return losses[-1], ws[-1]
 
 
-def least_squares_SGD(y, tx, initial_w, max_iters, gamma):
+def least_squares_SGD(y, tx, initial_w, max_iters, gamma, logging=False):
     """Computes a least squares model using stochastic gradient descent."""
     ws = [initial_w]
     losses = []
@@ -119,8 +120,8 @@ def least_squares_SGD(y, tx, initial_w, max_iters, gamma):
             w = w - gamma * grad
             ws.append(w)
             losses.append(loss)
-            # Logging
-            print(f"SGD({iter_}/{max_iters - 1}): loss={loss}, w={w}")
+            if logging == True:
+                print(f"SGD({iter_}/{max_iters - 1}): loss={loss}, w={w}")
     return losses[-1], ws[-1]
 
 
