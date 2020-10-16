@@ -35,7 +35,7 @@ def compute_loss_rmse(y, tx, w):
 
 
 def compute_loss_logistic(y, tx, w):
-    """Computes the loss by negative log likelyhood."""
+    """Computes the loss by negative log likelihood."""
     prediction = sigmoid(tx.dot(w))
     loss = y.T.dot(np.log(prediction)) + (1 - y).T.dot(np.log(1 - prediction))
     return np.squeeze(-loss)
