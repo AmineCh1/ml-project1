@@ -75,7 +75,7 @@ def standardize_data(x):
     x = x - mean_x
     std_x = np.std(x)
     x = x / std_x
-    return x
+    return x, mean_x, std_x
 
 
 def run_model(y, tx, model, gamma=0.05, initial_w=[], max_iters=1000,  lambda_=0):
@@ -176,7 +176,7 @@ def cross_validation(K, y_batch, tx_batch, model,  gamma=0.05, max_iters=100,  l
 
     ws = []
 
-    for i in range(0, N-1, fold_size):
+    for i in range(0, N, fold_size):
 
         # Define the indexes of the training set
         start = i
@@ -189,7 +189,7 @@ def cross_validation(K, y_batch, tx_batch, model,  gamma=0.05, max_iters=100,  l
         # for each run of the model start with a random w
         rand_initial = [np.random.uniform(-1, 1)
                         for x in range(shuffled_tx.shape[1])]
-        w = run_model(train_y, train_tx, model, gamma,
+        w = ridge_regression(train_y, train_tx, model, gamma,
                       rand_initial, max_iters, lambda_)
 
         # Test w
@@ -204,6 +204,41 @@ def cross_validation(K, y_batch, tx_batch, model,  gamma=0.05, max_iters=100,  l
         print("--------------")
     return np.mean(accuracies)
 
+def build_k_indices(y, k_fold, seed):
+    """build k indices for k-fold."""
+    num_row = y.shape[0]
+    interval = int(num_row / k_fold)
+    np.random.seed(seed)
+    indices = np.random.permutation(num_row)
+    k_indices = [indices[k * interval: (k + 1) * interval] for k in range(k_fold)]
+    return np.array(k_indices)
+
+def cross_validation_2(K, y, x, model,  gamma=0.05, max_iters=100,  lambda_=0, logging=True, seed=0.8):
+    
+    k_indices = build_k_indices(y,K,seed)
+    accuracies = []  # nb of accuracies to compute = K
+    ws = []
+    
+    for k in range(K):
+        te_indice = k_indices[k]
+        tr_indice = k_indices[~(np.arange(k_indices.shape[0]) == k)]
+        tr_indice = tr_indice.reshape(-1)
+        
+        y_te = y[te_indice]
+        y_tr = y[tr_indice]
+        x_te = x[te_indice]
+        x_tr = x[tr_indice]
+        
+        w = run_model(y_tr, x_tr,model =model, lambda_ = lambda_)
+        acc = np.mean(predict_labels(w, x_te) == y_te)
+        ws.append(w)
+        accuracies.append(acc)
+        
+        if logging:
+            print(acc)
+    if logging:
+        print("--------------")
+    return np.mean(accuracies)
 
 def expand_features(x, degree):
     """ Expand features according to polynomial basis_acc.
