@@ -54,6 +54,13 @@ def compute_corr(x_test):
     corr_mat = np.corrcoef(x_test, rowvar=False)
     return corr_mat
 
+def build_poly_2(x, degree):
+    """Polynomial basis functions for input data x, for j=0 up to j=degree."""
+    poly = np.ones((len(x), 1))
+    for deg in range(1, degree+1):
+        poly = np.c_[poly, np.power(x[:,1:],deg)]
+    return poly
+
 
 def visualize_corr(corr):
     fig, ax = plt.subplots(figsize=(corr.shape[0], corr.shape[1]))
@@ -134,9 +141,9 @@ def try_T(data, labels, prop, gamma=0.05, max_iters=100,  lambda_=0, seed=0):
     y_test = shuffled_labels[train_prop:]
     test = shuffled_data[train_prop:]
 
-    rand_w = [np.random.uniform(-1, 1) for x in range(data.shape[1])]
+#     rand_w = [np.random.uniform(-1, 1) for x in range(data.shape[1])]
 
-    w = run_model(y_train, train, rand_w, gamma=gamma)
+    w = run_model(y_train, train, model = 'lq')
     return np.mean(predict_labels(w, test) == y_test)
 
 
