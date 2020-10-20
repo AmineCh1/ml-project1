@@ -6,65 +6,75 @@ from proj1_helpers import *
 
 
 def partition_data(x, y, i):
-    "Merge data and labels"
-    
+    """ Partitions data according to given PRI_jet_num number.
+        Args: 
+            x: Data to partition.
+            y: Labels to partition.
+            i: PRI_jet_num number.
+        Returns:
+            index_i: Index of samples of data partition in original dataset. (Useful for concatenation later)
+            y_i: Labels corresponding to samples with PRI_jet_num = i.
+            x_i: Samples with PRI_jet_num = i. """
+    #     Merge data and labels
 
-    "Find indexes where the 23rd element of the data is 'i' (i = 0, 1, 2 and 3)"
+    #     Find indexes where the 23rd element of the data is 'i' (i = 0, 1, 2 and 3)
     index_i = x[:, 22] == i
- 
-    "Split the data according to the indexes found"
+
+    #     Split the data according to the indexes found
     x_i = x[index_i]
     y_i = y[index_i]
-    
-    # print(x_i.shape)
-    "-999s don't appear in 1st column following the indexes, so we don't take it in consideration in the following"
-    "and we get rid of the then 21st column containing the 'i's"
-   
+
+    #     -999s don't appear in 1st column following the indexes, so we don't take it in consideration in the following
+    #     and we get rid of the then 21st column containing the 'i's
+
     x_test = np.delete(x_i, 22, axis=1)
-    # print(x_test.shape)
-    "Remove columns where elements have value -999"
-    num_cols=[]
+
+    #     Remove columns where elements have value -999
+    num_cols = []
 
     for column in range(x_test[0].size):
-        if np.all(x_test[:,column]==-999):
+        if np.all(x_test[:, column] == -999):
             num_cols.append(column)
-    x_test = np.delete(x_test,num_cols, axis=1)
-    
-    # Remove columns where elemnts are the same
-    num_cols=[]
+    x_test = np.delete(x_test, num_cols, axis=1)
+
+    #     Remove columns where all elements have the same value.(i.e single valued column)
+    num_cols = []
     for column in range(x_test[0].size):
-        if np.all(x_test[:,column]==x_test[0, column]):
+        if np.all(x_test[:, column] == x_test[0, column]):
             num_cols.append(column)
-    x_test = np.delete(x_test,num_cols, axis=1)
+    x_test = np.delete(x_test, num_cols, axis=1)
+    Print("Single valued columns:")
+    print(num_cols)
 
-    "Concactenation of 1st column of the data and the rest with elements of value -999 removed"
-    # print(-999 in x_i[:,0])
-    
+    #     Concactenation of 1st column of the data and the rest with elements of value -999 removed
 
-    "Replace elements of value -999 in 1st column of the data by the mean of "
-    "Here, we can do a weighted mean instead of simply taking the mean "
-    
+    #     Replace elements of value -999 in 1st column of the data by the mean of the non-NaN values of the columns
+
     indices = x_test[:, 0] == -999
-    # print( True in indices)
-    x_test[indices,0] = np.mean(x_test[~indices, 0])
+
+    x_test[indices, 0] = np.mean(x_test[~indices, 0])
     print("Final shape : {} ".format(x_test.shape))
-    return index_i, y_i, x_test 
-   
+    return index_i, y_i, x_test
+
 
 def compute_corr(x_test):
-
+    """ Computes correlation matrix of given data."""
     corr_mat = np.corrcoef(x_test, rowvar=False)
     return corr_mat
 
-def build_poly_2(x, degree):
-    """Polynomial basis functions for input data x, for j=0 up to j=degree."""
+
+def build_poly(x, degree):
+    """Polynomial basis functions for input data x, for j=0 up to j=degree.
+        Args: 
+            x: """
     poly = np.ones((len(x), 1))
     for deg in range(1, degree+1):
-        poly = np.c_[poly, np.power(x[:,1:],deg)]
+        poly = np.c_[poly, np.power(x[:, 1:], deg)]
     return poly
 
 
 def visualize_corr(corr):
+    """Visualization aid for correlation matrix."""
     fig, ax = plt.subplots(figsize=(corr.shape[0], corr.shape[1]))
     sns.heatmap(corr, vmax=1.0, center=0, fmt='.2f',
                 square=True, linewidths=.5, annot=True, cbar_kws={"shrink": .70})
@@ -72,7 +82,15 @@ def visualize_corr(corr):
 
 
 def standardize_data(x):
-    """Standardize the original data set."""
+    """Standardize the original data set.
+        Args: 
+            x: Data to standardize.
+        Returns: 
+            x: Standardized data.
+            mean_x: Mean of the data (Sample-wise).
+            std_x: Standard deviation of the data (Sample-wise).
+    """
+
     mean_x = np.mean(x, axis=0)
     x = x - mean_x
     std_x = np.std(x, axis=0)
@@ -93,7 +111,7 @@ def run_model(y, tx, model, gamma=0.05, initial_w=[], max_iters=1000,  lambda_=0
             max_iters: Nb of iterations.
             lambda_: Regularizer parameter.
         Returns:
-            w: weight vector w.
+            w: Weight vector w.
     """
     # Change for future algorithms
     if model == 'gd':
@@ -145,11 +163,22 @@ def try_T(data, labels, prop, gamma=0.05, max_iters=100,  lambda_=0, seed=0):
 
 #     rand_w = [np.random.uniform(-1, 1) for x in range(data.shape[1])]
 
-    w = run_model(y_train, train, model = 'lq')
+    w = run_model(y_train, train, model='lq')
     return np.mean(predict_labels(w, test) == y_test)
 
 
-def cross_validation(K, y_batch, tx_batch, model,  gamma=0.05, max_iters=100,  lambda_=0, logging=False, seed=0):
+def build_k_indices(y, k_fold, seed):
+    """Builds k indices for k-fold."""
+    num_row = y.shape[0]
+    interval = int(num_row / k_fold)
+    np.random.seed(seed)
+    indices = np.random.permutation(num_row)
+    k_indices = [indices[k * interval: (k + 1) * interval]
+                 for k in range(k_fold)]
+    return np.array(k_indices)
+
+
+def cross_validation(K, y, x, model,  gamma=0.05, max_iters=100,  lambda_=0, logging=True, seed=0.8):
     """ Applies cross validation to a given set of data.
 
         Args:
@@ -165,121 +194,42 @@ def cross_validation(K, y_batch, tx_batch, model,  gamma=0.05, max_iters=100,  l
         Returns:
             A mean of the accuracies of the K different folds.
     """
-    N = tx_batch.shape[0]
-    # We shuffle the data beforehand
-    np.random.seed(seed)
-    shuffle_indices = np.random.permutation(np.arange(N))
-    shuffled_tx = tx_batch[shuffle_indices]
-    shuffled_y = y_batch[shuffle_indices]
-
-    fold_size = N//K  # euclidean divison => cast as int
-
-    accuracies = []  # nb of accuracies to compute = K
-
-    ws = []
-
-    for i in range(0, N, fold_size):
-
-        # Define the indexes of the training set
-        start = i
-        end = i + fold_size
-
-        # Define training set
-        train_tx = np.vstack((shuffled_tx[:start], shuffled_tx[end:N-1]))
-        train_y = np.array(list(shuffled_y[:start])+list(shuffled_y[end:N-1]))
-
-        # for each run of the model start with a random w
-        rand_initial = [np.random.uniform(-1, 1)
-                        for x in range(shuffled_tx.shape[1])]
-        w = ridge_regression(train_y, train_tx, model, gamma,
-                      rand_initial, max_iters, lambda_)
-
-        # Test w
-        ws.append(w)
-        acc = np.mean(predict_labels(
-            w, shuffled_tx[start: end]) == shuffled_y[start: end])
-        accuracies.append(acc)
-
-        if logging:
-            print(acc)
-    if logging:
-        print("--------------")
-    return np.mean(accuracies)
-
-def build_k_indices(y, k_fold, seed):
-    """build k indices for k-fold."""
-    num_row = y.shape[0]
-    interval = int(num_row / k_fold)
-    np.random.seed(seed)
-    indices = np.random.permutation(num_row)
-    k_indices = [indices[k * interval: (k + 1) * interval] for k in range(k_fold)]
-    return np.array(k_indices)
-
-def cross_validation_2(K, y, x, model,  gamma=0.05, max_iters=100,  lambda_=0, logging=True, seed=0.8):
-    
-    k_indices = build_k_indices(y,K,seed)
+    k_indices = build_k_indices(y, K, seed)
     accuracies = []  # nb of accuracies to compute = K
     ws = []
-    
+
     for k in range(K):
         te_indice = k_indices[k]
         tr_indice = k_indices[~(np.arange(k_indices.shape[0]) == k)]
         tr_indice = tr_indice.reshape(-1)
-        
+
         y_te = y[te_indice]
         y_tr = y[tr_indice]
         x_te = x[te_indice]
         x_tr = x[tr_indice]
-        
-        w = run_model(y_tr, x_tr,model =model, lambda_ = lambda_)
+
+        w = run_model(y_tr, x_tr, model=model, lambda_=lambda_)
         acc = np.mean(predict_labels(w, x_te) == y_te)
         ws.append(w)
         accuracies.append(acc)
-        
+
         if logging:
             print(acc)
     if logging:
         print("--------------")
     return np.mean(accuracies)
 
-def expand_features(x, degree):
-    """ Expand features according to polynomial basis_acc.
-
-    Args:
-        x: A numpy array representing the data to expand.
-        degree: Degree of polynomial expansion (i.e x^k).
-    Returns:
-        The same array with with expanded features.
-    """
-    array_expanded = []
-
-    for column in x.T[1:]:
-        array_expanded.append(
-            np.vstack([column**k for k in range(1, degree+1)]).T)
-
-    return np.hstack((np.ones((x.shape[0], 1)), np.concatenate(array_expanded,axis=1)))
-
-
-# def look_for_best_degree_lambda(data, y,degree,lambda_start = 0, lambda_end):
-
-#     range_gamma_start=0.02
-#     range_gamma_end =0.15
-
-
-#     degrees = np.arange(1,degree)
-
-#     acc = []
-#     ind=[]
-#     for d in degrees: 
-#         print(d)
-#         acc.append(cross_validation(11, y0, expand_features(std_test0,d),model='ridge_reg',lambda_=0.5,logging=True))
-#         ind.append((20,d))
-        
-#     print("Best parameters: lambda={}, polynomial degree ={}. Acuracy:{}".format(ind[np.argmax(acc)][0],ind[np.argmax(acc)][1],np.max(acc)))
-
 
 def forward_selection(y, tx, K):
-
+    """ Implements forward selection of the 2nd order, that is, taking the product of two columns and appending it to tx, and 
+        assessing whether the resulting matrix is better for training our chosen model.
+        Args: 
+            y: Labels to predict.
+            tx: Data to iteratively augment with interaction terms.
+            K: Number of folds used in the cross-validation.
+        Returns:
+            tx: Possibly augmented tx.
+        """"
     n_col = tx.shape[1]
     indices = [[i, j] for i in range(n_col) for j in range(n_col) if j >= i]
 
@@ -294,9 +244,3 @@ def forward_selection(y, tx, K):
             tx = augmented_tx
 
     return tx
-
-
-# def feature_combination(x, func_,columns):
-#     additional_columns =  func_(a) for a in x[:,columns]
-
-#     return np.array(additional_columns)
