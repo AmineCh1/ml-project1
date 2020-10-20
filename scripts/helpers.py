@@ -5,7 +5,7 @@ from implementations import *
 from proj1_helpers import *
 
 
-def partition_data(x, y,i):
+def partition_data(x, y, i):
     "Merge data and labels"
     
 
@@ -21,19 +21,21 @@ def partition_data(x, y,i):
     "and we get rid of the then 21st column containing the 'i's"
    
     x_test = np.delete(x_i, 22, axis=1)
-    
     # print(x_test.shape)
     "Remove columns where elements have value -999"
-
     num_cols=[]
 
     for column in range(x_test[0].size):
         if np.all(x_test[:,column]==-999):
-
             num_cols.append(column)
-
     x_test = np.delete(x_test,num_cols, axis=1)
     
+    # Remove columns where elemnts are the same
+    num_cols=[]
+    for column in range(x_test[0].size):
+        if np.all(x_test[:,column]==x_test[0, column]):
+            num_cols.append(column)
+    x_test = np.delete(x_test,num_cols, axis=1)
 
     "Concactenation of 1st column of the data and the rest with elements of value -999 removed"
     # print(-999 in x_i[:,0])
@@ -71,9 +73,9 @@ def visualize_corr(corr):
 
 def standardize_data(x):
     """Standardize the original data set."""
-    mean_x = np.mean(x)
+    mean_x = np.mean(x, axis=0)
     x = x - mean_x
-    std_x = np.std(x)
+    std_x = np.std(x, axis=0)
     x = x / std_x
     return x, mean_x, std_x
 
