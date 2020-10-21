@@ -18,7 +18,7 @@ purposes.
 
 def sigmoid(x):
     """Applies sigmoid function to x."""
-    return 1.0 / (1 + np.exp(-x))
+    return 1.0 / (1.0 + np.exp(-x))
 
 
 def compute_loss_MSE(y, tx, w):
@@ -165,23 +165,56 @@ def ridge_regression(y, tx, lambda_):
                   
 def logistic_regression(y, tx, initial_w, max_iters, gamma):
     """Computes logistic regression using gradient descent."""
-    #TODO: Maybe use SGD instead of GD if it is too slow.
+    if len(y.shape) == 1:
+        y = np.expand_dims(y, axis=1)
+    if len(initial_w.shape) == 1:
+        initial_w = np.expand_dims(initial_w, axis=1)
     ws = [initial_w]
     losses = []
     w = initial_w
     for i in range(max_iters):
         loss = compute_loss_logistic(y, tx, w)
+        if loss == np.inf:
+            print(f'Stopped at {i} with previous loss {losses[-2]}')
+            return losses[-2], ws[-2]
+        if i % 10000 == 0:
+            print(f"At {i} with loss={loss}")
         grad = compute_gradient_logistic(y, tx, w)
         w = w - gamma * grad
         ws.append(w)
         losses.append(loss)
     return losses[-1], ws[-1]
 
+
+def penalized_logistic_regression(y, tx, w, lambda_):
+    """Return the loss, gradient"""
+    num_samples = y.shape[0]
+    loss = compute_loss_logistic(y, tx, w) + lambda_ * np.squeeze(w.T.dot(w))
+    grad = compute_gradient_logistic(y, tx, w) + 2 * lambda_ * w
+    return loss, grad
+
+
+def learning_by_penalized_gradient(y, tx, w, gamma, lambda_):
+    loss, grad = penalized_logistic_regression(y, tx, w, lambda_)
+    w = w - gamma * grad
+    return loss, w
+    
                   
 def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
-    #TODO : Regularized logistic regression using gradient descent 
-    #or SGD
-    raise NotImplementedError
+    if len(y.shape) == 1:
+        y = np.expand_dims(y, axis=1)
+    if len(initial_w.shape) == 1:
+        initial_w = np.expand_dims(initial_w, axis=1)
+    ws = [initial_w]
+    losses = []
+    w = initial_w
+    for i in range(max_iters):
+        loss, w = learning_by_penalized_gradient(y, tx, w, gamma, lambda_)
+        if i % 1000==0:
+            print(f'At step {i} with loss={loss}')
+        losses.append(loss)
+        ws.append(w)
+    return losses[-1], ws[-1]
 
 
 ############################ ADDITIONAL FUNCTIONS #############################
@@ -277,8 +310,7 @@ def standardize_data(x):
     return x, mean_x, std_x
 
 
-def run_model(y, tx, model, gamma=0.05, initial_w=[], max_iters=1000,
-              lambda_=0):
+def run_model(y, tx, model, gamma=0.05, max_iters=1000, lambda_=0):
     """Runs the chosen model with the appropriate parameters.
 
     Args:
@@ -299,48 +331,22 @@ def run_model(y, tx, model, gamma=0.05, initial_w=[], max_iters=1000,
         w: Weight vector w.
     """
     if model == 'gd':
+        initial_w = np.zeros((tx.shape[1],))
         loss, w = least_squares_GD(y, tx, initial_w, max_iters, gamma)
     elif model == 'sgd':
+        initial_w = np.zeros((tx.shape[1],))
         loss, w = least_squares_SGD(y, tx, initial_w, max_iters, gamma)
     elif model == 'lq':
         loss, w = least_squares(y, tx)
     elif model == 'ridge_reg':
         loss, w = ridge_regression(y, tx, lambda_)
     elif model == 'log_reg':
+        initial_w = np.zeros((tx.shape[1],))
         loss, w = logistic_regression(y, tx, initial_w, max_iters, gamma)
+    elif model == 'reg_log_reg':
+        initial_w = np.zeros((tx.shape[1],))
+        loss, w = reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma)
     return w
-
-
-def try_T(data, labels, prop, gamma=0.05, max_iters=100,  lambda_=0, seed=0):
-    """ Separates the given data into a training set and testing set, and
-    returns the accuracy of the model.
-
-    Args:
-        data: A numpy array representing the data.
-        labels: A numpy array representing the labels.
-        prop: Proportion of the data set dedicated to training.
-          The remaining data is used for validation.
-        gamma: step size parameter gamma.
-    Returns:
-        The accuracy of the trained model on the validation set, w.r.t the
-        chosen gamma.
-    """
-    N = data.shape[0]
-    # We shuffle the data beforehand
-    np.random.seed(seed)
-    shuffle_indices = np.random.permutation(np.arange(N))
-    shuffled_data = data[shuffle_indices]
-    shuffled_labels = labels[shuffle_indices]
-    train_prop = int(data.shape[0] * prop)
-    train = shuffled_data[:train_prop]
-    y_train = shuffled_labels[:train_prop]
-    y_test = shuffled_labels[train_prop:]
-    test = shuffled_data[train_prop:]
-
-#     rand_w = [np.random.uniform(-1, 1) for x in range(data.shape[1])]
-
-    w = run_model(y_train, train, model='lq')
-    return np.mean(predict_labels(w, test) == y_test)
 
 
 def build_k_indices(y, k_fold, seed):
@@ -354,8 +360,8 @@ def build_k_indices(y, k_fold, seed):
     return np.array(k_indices)
 
 
-def cross_validation(K, y, x, model, gamma=0.05, max_iters=100, lambda_=0,
-                     logging=True, seed=0.8):
+def cross_validation(K, y, x, model, gamma=0.05, max_iters=1000, lambda_=0,
+                     logging=False, seed=0.8):
     """Applies cross validation to a given set of data.
     
     Args:
@@ -370,6 +376,7 @@ def cross_validation(K, y, x, model, gamma=0.05, max_iters=100, lambda_=0,
           'lq': Least Squares,
           'ridge_reg': Ridge Regression,
           'log_reg': Logistic Regression
+          'reg_log_reg': Regularized Logistic Regression
         initial_w: Initial weight vector used in Gradient Descent or Stochastic
           Gradient Descent.
         logging: Intermediary printing.
@@ -379,22 +386,24 @@ def cross_validation(K, y, x, model, gamma=0.05, max_iters=100, lambda_=0,
     k_indices = build_k_indices(y, K, seed)
     accuracies = []  # nb of accuracies to compute = K
     ws = []
-
     for k in range(K):
         te_indice = k_indices[k]
         tr_indice = k_indices[~(np.arange(k_indices.shape[0]) == k)]
         tr_indice = tr_indice.reshape(-1)
-
         y_te = y[te_indice]
         y_tr = y[tr_indice]
         x_te = x[te_indice]
         x_tr = x[tr_indice]
-
-        w = run_model(y_tr, x_tr, model=model, lambda_=lambda_)
-        acc = np.mean(predict_labels(w, x_te) == y_te)
+        w = run_model(y_tr, x_tr, model=model, gamma=gamma,
+                      max_iters=max_iters, lambda_=lambda_)
+        if model == 'log_reg' or model == 'reg_log_reg':
+            acc = np.mean(
+                predict_labels(w, x_te, threshold=0.5, logist=True,
+                               negative_label=0, positive_label=1) == y_te)
+        else:
+            acc = np.mean(predict_labels(w, x_te) == y_te)
         ws.append(w)
         accuracies.append(acc)
-
         if logging:
             print(acc)
     mu_acc = np.mean(accuracies)

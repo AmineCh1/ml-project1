@@ -4,6 +4,11 @@ import csv
 import numpy as np
 
 
+def sigmoid(x):
+    """Applies sigmoid function to x."""
+    return 1.0 / (1.0 + np.exp(-x))
+
+
 def load_csv_data(data_path, sub_sample=False):
     """Loads data and returns y (class labels), tX (features) and ids (event ids)"""
     y = np.genfromtxt(data_path, delimiter=",", skip_header=1, dtype=str, usecols=1)
@@ -24,12 +29,14 @@ def load_csv_data(data_path, sub_sample=False):
     return yb, input_data, ids
 
 
-def predict_labels(weights, data):
+def predict_labels(weights, data, threshold=0, logist=False, negative_label=-1, positive_label=1):
     """Generates class predictions given weights, and a test data matrix"""
-    y_pred = np.dot(data, weights)
-    y_pred[np.where(y_pred <= 0)] = -1
-    y_pred[np.where(y_pred > 0)] = 1
-    
+    if logist:
+        y_pred = sigmoid(data.dot(weights))
+    else:
+        y_pred = np.dot(data, weights)
+    y_pred[np.where(y_pred <= threshold)] = negative_label
+    y_pred[np.where(y_pred > threshold)] = positive_label  
     return y_pred
 
 
