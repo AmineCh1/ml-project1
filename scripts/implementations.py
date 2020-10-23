@@ -16,7 +16,6 @@ purposes.
 '''
 
 
-
 def sigmoid(x):
     """Applies sigmoid function to x."""
     return 1.0 / (1.0 + np.exp(-x))
@@ -26,7 +25,7 @@ def compute_loss_MSE(y, tx, w):
     """Computes the mean squared error."""
     e = y - tx.dot(w)
     return 1/2 * np.mean(e**2)
-    
+
 
 def compute_loss_MAE(y, tx, w):
     """Computes the mean absolute error."""
@@ -45,7 +44,7 @@ def compute_loss_logistic(y, tx, w):
     loss = y.T.dot(np.log(prediction)) + (1 - y).T.dot(np.log(1 - prediction))
     return np.squeeze(-loss)
 
-    
+
 def compute_gradient(y, tx, w):
     """Computes the gradient of the weight vector for linear regression."""
     N = len(y)
@@ -58,18 +57,18 @@ def compute_gradient_logistic(y, tx, w):
     prediction = sigmoid(tx.dot(w))
     grad = tx.T.dot(prediction - y)
     return grad
-    
+
 
 def compute_subgradient(y, tx, w):
-    #In case we want to play with non-differentiable functions
-    N  = len(y)
-    e = y -tx@w 
+    # In case we want to play with non-differentiable functions
+    N = len(y)
+    e = y - tx@w
     return (-1/N)*np.sign(e)@tx
 
-    
+
 def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
     """Generate a minibatch iterator for a dataset.
-    
+
     Takes as input two iterables (here the output desired values 'y' and the
     input data 'tx').
     Outputs an iterator which gives mini-batches of `batch_size` matching
@@ -97,7 +96,7 @@ def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
 
 def least_squares_GD(y, tx, initial_w, max_iters, gamma, logging=False):
     """Computes a least squares model using gradient descent.
-    
+
     Args:
         y: A numpy array representing the output variable.
         tx: A numpy array representing the transpose matrix of input variable X.
@@ -106,7 +105,7 @@ def least_squares_GD(y, tx, initial_w, max_iters, gamma, logging=False):
             convergence.
         gamma: A float number greater than 0 used as a learning rate.
         logging: A boolean to print logs or not.
-        
+
     Returns:
         A tuple with intermediate losses and weights respectively.
     """
@@ -120,7 +119,8 @@ def least_squares_GD(y, tx, initial_w, max_iters, gamma, logging=False):
         ws.append(w)
         losses.append(loss)
         if logging:
-            print(f"Gradient Descent({iter_}/{max_iters - 1}): loss={loss}, w={w}")
+            print(
+                f"Gradient Descent({iter_}/{max_iters - 1}): loss={loss}, w={w}")
     return losses[-1], ws[-1]
 
 
@@ -150,10 +150,10 @@ def least_squares(y, tx):
     loss = compute_loss_MSE(y, tx, w)
     return loss, w
 
-                  
+
 def ridge_regression(y, tx, lambda_):
     """Computes rigde regression using normal equations.
-    
+
     The lambda_ parameter is the one used in the minimization formula.
     """
     lambda_prime = 2 * lambda_ * len(y)
@@ -163,7 +163,7 @@ def ridge_regression(y, tx, lambda_):
     loss = compute_loss_rmse(y, tx, w)
     return loss, w
 
-                  
+
 def logistic_regression(y, tx, initial_w, max_iters, gamma, logging=False):
     """Computes logistic regression using gradient descent."""
     if len(y.shape) == 1:
@@ -176,7 +176,7 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma, logging=False):
     for i in range(max_iters):
         loss = compute_loss_logistic(y, tx, w)
         if loss == np.inf:
-            if logging: 
+            if logging:
                 print(f'Stopped at {i} with previous loss {losses[-2]}')
             return losses[-2], ws[-2]
         if i % 10000 == 0:
@@ -201,9 +201,9 @@ def learning_by_penalized_gradient(y, tx, w, gamma, lambda_):
     loss, grad = penalized_logistic_regression(y, tx, w, lambda_)
     w = w - gamma * grad
     return loss, w
-    
-                  
-def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma,logging=False):
+
+
+def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma, logging=False):
     if len(y.shape) == 1:
         y = np.expand_dims(y, axis=1)
     if len(initial_w.shape) == 1:
@@ -214,7 +214,7 @@ def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma,logging=
     for i in range(max_iters):
         loss, w = learning_by_penalized_gradient(y, tx, w, gamma, lambda_)
         if logging:
-            if i % 1000==0:
+            if i % 1000 == 0:
                 print(f'At step {i} with loss={loss}')
         losses.append(loss)
         ws.append(w)
@@ -349,7 +349,8 @@ def run_model(y, tx, model, gamma=0.05, max_iters=1000, lambda_=0):
         loss, w = logistic_regression(y, tx, initial_w, max_iters, gamma)
     elif model == 'reg_log_reg':
         initial_w = np.zeros((tx.shape[1],))
-        loss, w = reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma)
+        loss, w = reg_logistic_regression(
+            y, tx, lambda_, initial_w, max_iters, gamma)
     return w
 
 
@@ -367,7 +368,7 @@ def build_k_indices(y, k_fold, seed):
 def cross_validation(K, y, x, model, gamma=0.05, max_iters=1000, lambda_=0,
                      logging=False, seed=0.8):
     """Applies cross validation to a given set of data.
-    
+
     Args:
         K: Number of folds.
         y_batch: Labels of given dataset.
@@ -433,6 +434,7 @@ def forward_selection(y, tx, K):
     n_col = tx.shape[1]
     indices = [[i, j] for i in range(n_col) for j in range(n_col) if j >= i]
     basis_acc = cross_validation(K, y, tx, 'lq')
+    
     for idx in indices:
         augmented_tx = np.c_[tx, tx[:, idx[0]] * tx[:, idx[1]]]
         augmented_acc = (cross_validation(K, augmented_tx, y, 'lq'))
@@ -441,18 +443,23 @@ def forward_selection(y, tx, K):
             tx = augmented_tx
     return tx
 
+
 def find_best_params(y, tx, K, max_degree=13):
-    degrees= np.arange(1, max_degree+1)
+    degrees = np.arange(1, max_degree+1)
     lambdas = np.logspace(-4, -2, 10)
     lambdas = np.append(lambdas, 0)
     acc = []
     ind = []
-    for d in degrees: 
+
+    for d in degrees:
         for l in lambdas:
             ind.append((d, l))
             expanded = build_poly(tx, d)
-            accuracy = cross_validation(K, y, expanded, model='ridge_reg',logging=True, lambda_= l, seed=0)
+            accuracy = cross_validation(
+                K, y, expanded, model='ridge_reg', logging=True, lambda_=l, seed=0)
             acc.append(accuracy)
-    best_degree_lambda, max_accuracy = ind[np.argmax(acc)],np.max(acc)
-    print("Best parameters: for  polynomial degree ={}, lambda={} Acuracy:{}".format(best_degree_lambda[0], best_degree_lambda[1], max_accuracy))
+
+    best_degree_lambda, max_accuracy = ind[np.argmax(acc)], np.max(acc)
+    print("Best parameters: for  polynomial degree ={}, lambda={} Acuracy:{}".format(
+        best_degree_lambda[0], best_degree_lambda[1], max_accuracy))
     return best_degree_lambda
