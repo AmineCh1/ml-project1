@@ -12,6 +12,7 @@ description.
 
 Nevertheless, we keep track of the intermediate w and losses for visualization
 purposes. 
+
 '''
 
 
@@ -163,7 +164,7 @@ def ridge_regression(y, tx, lambda_):
     return loss, w
 
                   
-def logistic_regression(y, tx, initial_w, max_iters, gamma):
+def logistic_regression(y, tx, initial_w, max_iters, gamma, logging=False):
     """Computes logistic regression using gradient descent."""
     if len(y.shape) == 1:
         y = np.expand_dims(y, axis=1)
@@ -175,10 +176,12 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
     for i in range(max_iters):
         loss = compute_loss_logistic(y, tx, w)
         if loss == np.inf:
-            print(f'Stopped at {i} with previous loss {losses[-2]}')
+            if logging: 
+                print(f'Stopped at {i} with previous loss {losses[-2]}')
             return losses[-2], ws[-2]
         if i % 10000 == 0:
-            print(f"At {i} with loss={loss}")
+            if logging:
+                print(f"At {i} with loss={loss}")
         grad = compute_gradient_logistic(y, tx, w)
         w = w - gamma * grad
         ws.append(w)
@@ -200,7 +203,7 @@ def learning_by_penalized_gradient(y, tx, w, gamma, lambda_):
     return loss, w
     
                   
-def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
+def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma,logging=False):
     if len(y.shape) == 1:
         y = np.expand_dims(y, axis=1)
     if len(initial_w.shape) == 1:
@@ -210,8 +213,9 @@ def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
     w = initial_w
     for i in range(max_iters):
         loss, w = learning_by_penalized_gradient(y, tx, w, gamma, lambda_)
-        if i % 1000==0:
-            print(f'At step {i} with loss={loss}')
+        if logging:
+            if i % 1000==0:
+                print(f'At step {i} with loss={loss}')
         losses.append(loss)
         ws.append(w)
     return losses[-1], ws[-1]
@@ -398,8 +402,9 @@ def cross_validation(K, y, x, model, gamma=0.05, max_iters=1000, lambda_=0,
                       max_iters=max_iters, lambda_=lambda_)
         if model == 'log_reg' or model == 'reg_log_reg':
             acc = np.mean(
-                predict_labels(w, x_te, threshold=0.5, logist=True,
+                predict_labels(w, x_te, threshold=0.5, logist=False,
                                negative_label=0, positive_label=1) == y_te)
+            print(acc)
         else:
             acc = np.mean(predict_labels(w, x_te) == y_te)
         ws.append(w)
@@ -436,4 +441,18 @@ def forward_selection(y, tx, K):
             tx = augmented_tx
     return tx
 
-
+def find_best_params(y, tx, K, max_degree=13):
+    degrees= np.arange(1, max_degree+1)
+    lambdas = np.logspace(-4, -2, 10)
+    lambdas = np.append(lambdas, 0)
+    acc = []
+    ind = []
+    for d in degrees: 
+        for l in lambdas:
+            ind.append((d, l))
+            expanded = build_poly(tx, d)
+            accuracy = cross_validation(K, y, expanded, model='ridge_reg',logging=True, lambda_= l, seed=0)
+            acc.append(accuracy)
+    best_degree_lambda, max_accuracy = ind[np.argmax(acc)],np.max(acc)
+    print("Best parameters: for  polynomial degree ={}, lambda={} Acuracy:{}".format(best_degree_lambda[0], best_degree_lambda[1], max_accuracy))
+    return best_degree_lambda
