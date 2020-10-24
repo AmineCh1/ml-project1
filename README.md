@@ -2,7 +2,7 @@
 Here's a quick explanation on how to run the provided code.
 ## Prerequisites
 - The files ```run.py``` and ```implementations.py```should be located in the "scripts" folder.
-- The "data" folder should be on the same level as the "scripts" folder.
+- The "data" folder should be located on the same level as the "scripts" folder.
 
 ## Execution
 To replicate our submission on AICrowd, simply run the following command : ``` python run.py```.
