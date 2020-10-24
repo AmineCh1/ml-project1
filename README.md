@@ -5,7 +5,7 @@ Here's a quick explanation on how to run the provided code.
 - The "data" folder should be on the same level as the "scripts" folder.
 
 ## Execution
-To replicate our submission on AICrowd, simply execute : ``` python run.py```.
+To replicate our submission on AICrowd, simply run the following command : ``` python run.py```.
 (N.B : To actually retrain the model and recompute the optimal hyper-parameters, run ``` python run.py --recompute_params``` ).
 
 ## Submission
