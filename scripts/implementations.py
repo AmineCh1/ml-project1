@@ -418,7 +418,7 @@ def cross_validation(K, y, x, model, gamma=0.05, max_iters=1000, lambda_=0,
     return mu_acc
 
 
-def forward_selection(y, tx, K):x
+def forward_selection(y, tx, K):
     """Implements forward selection of the 2nd order.
 
     Takes the product of two columns, appends it to tx and assesses whether the
