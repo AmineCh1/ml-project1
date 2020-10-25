@@ -121,7 +121,7 @@ def least_squares_GD(y, tx, initial_w, max_iters, gamma, logging=False):
         if logging:
             print(
                 f"Gradient Descent({iter_}/{max_iters - 1}): loss={loss}, w={w}")
-    return losses[-1], ws[-1]
+    return ws[-1], losses[-1]
 
 
 def least_squares_SGD(y, tx, initial_w, max_iters, gamma, logging=False):
@@ -139,7 +139,7 @@ def least_squares_SGD(y, tx, initial_w, max_iters, gamma, logging=False):
             losses.append(loss)
             if logging == True:
                 print(f"SGD({iter_}/{max_iters - 1}): loss={loss}, w={w}")
-    return losses[-1], ws[-1]
+    return ws[-1], losses[-1]
 
 
 def least_squares(y, tx):
@@ -148,7 +148,7 @@ def least_squares(y, tx):
     b = tx.T @ y
     w = np.linalg.solve(a, b)
     loss = compute_loss_MSE(y, tx, w)
-    return loss, w
+    return w, loss
 
 
 def ridge_regression(y, tx, lambda_):
@@ -161,7 +161,7 @@ def ridge_regression(y, tx, lambda_):
     b = tx.T @ y
     w = np.linalg.solve(a, b)
     loss = compute_loss_rmse(y, tx, w)
-    return loss, w
+    return w, loss
 
 
 def logistic_regression(y, tx, initial_w, max_iters, gamma, logging=False):
@@ -178,7 +178,7 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma, logging=False):
         if loss == np.inf:
             if logging:
                 print(f'Stopped at {i} with previous loss {losses[-2]}')
-            return losses[-2], ws[-2]
+            return ws[-2], losses[-2]
         if i % 10000 == 0:
             if logging:
                 print(f"At {i} with loss={loss}")
@@ -186,7 +186,7 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma, logging=False):
         w = w - gamma * grad
         ws.append(w)
         losses.append(loss)
-    return losses[-1], ws[-1]
+    return ws[-1], losses[-1]
 
 
 def penalized_logistic_regression(y, tx, w, lambda_):
@@ -218,7 +218,7 @@ def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma, logging
                 print(f'At step {i} with loss={loss}')
         losses.append(loss)
         ws.append(w)
-    return losses[-1], ws[-1]
+    return ws[-1], losses[-1] 
 
 
 ############################ ADDITIONAL FUNCTIONS #############################
@@ -336,20 +336,20 @@ def run_model(y, tx, model, gamma=0.05, max_iters=1000, lambda_=0):
     """
     if model == 'gd':
         initial_w = np.zeros((tx.shape[1],))
-        loss, w = least_squares_GD(y, tx, initial_w, max_iters, gamma)
+        w, loss = least_squares_GD(y, tx, initial_w, max_iters, gamma)
     elif model == 'sgd':
         initial_w = np.zeros((tx.shape[1],))
-        loss, w = least_squares_SGD(y, tx, initial_w, max_iters, gamma)
+        w, loss = least_squares_SGD(y, tx, initial_w, max_iters, gamma)
     elif model == 'lq':
-        loss, w = least_squares(y, tx)
+        w, loss = least_squares(y, tx)
     elif model == 'ridge_reg':
-        loss, w = ridge_regression(y, tx, lambda_)
+        w, loss = ridge_regression(y, tx, lambda_)
     elif model == 'log_reg':
         initial_w = np.zeros((tx.shape[1],))
-        loss, w = logistic_regression(y, tx, initial_w, max_iters, gamma)
+        w, loss = logistic_regression(y, tx, initial_w, max_iters, gamma)
     elif model == 'reg_log_reg':
         initial_w = np.zeros((tx.shape[1],))
-        loss, w = reg_logistic_regression(
+        w, loss = reg_logistic_regression(
             y, tx, lambda_, initial_w, max_iters, gamma)
     return w
 
