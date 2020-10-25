@@ -14,7 +14,7 @@ To replicate our submission on AICrowd, simply run the following command : ``` p
 The submission ``` submission-ridge.csv``` can be found in the "data" folder.
 Then, it simply is a matter of uploading the file to AICrowd, but you already knew that I suppose. :)
 
-## All files description
+## All scripts files description
 - ```exploratory_data_analysis.ipynb```: This notebook contains various plots
 we did for exploring the data.
 - ```implementations.py```: Machine learning algorithms, loss functions,
