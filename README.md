@@ -5,7 +5,7 @@ Here's a quick explanation on how to run the provided code.
 - The "data" folder should be located on the same level as the "scripts" folder.
 - All the code was written with Python ```3.7.6```.
 - We use matplotlib and seaborn for some visualizations in notebook. Check
-```requierments.py``` file for exact version of each library.
+```requirements.txt``` file for exact version of each library.
 ## Execution
 To replicate our submission on AICrowd, simply run the following command : ``` python run.py```.
 (N.B : To actually retrain the model and recompute the optimal hyper-parameters, run ``` python run.py --recompute_params``` ).
