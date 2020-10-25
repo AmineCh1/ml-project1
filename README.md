@@ -1,4 +1,4 @@
-# Detecting the Higgs Boson (ML project 1)
+# Detecting the Higgs :b: oson (ML project 1)
 Here's a quick explanation on how to run the provided code.
 ## Prerequisites
 - The files ```run.py``` and ```implementations.py```should be located in the "scripts" folder.
