@@ -15,10 +15,10 @@ The submission ``` submission-ridge.csv``` can be found in the "data" folder.
 Then, it simply is a matter of uploading the file to AICrowd, but you already knew that I suppose. :)
 
 ## All files description
-```exploratory\_data\_analysis.ipynb``` - This notebook contains various plots
+- ```exploratory_data_analysis.ipynb```: This notebook contains various plots
 we did for exploring the data.
-```implementations.py``` - Machine learning algorithms, loss functions,
+- ```implementations.py```: Machine learning algorithms, loss functions,
 cross-validation, data preprocessing, finding best params
-```proj1_helpers.py``` - Helper methods for reading the data and making predictions.
-```project1.ipynb``` - Notebook used in exploring various ML models.
-```run.py``` - Final pipeline which outputs the best predictions.
+- ```proj1_helpers.py```: Helper methods for reading the data and making predictions.
+- ```project1.ipynb```: Notebook used in exploring various ML models.
+- ```run.py```: Final pipeline which outputs the best predictions.
