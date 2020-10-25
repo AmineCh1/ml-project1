@@ -3,17 +3,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import math
 from proj1_helpers import *
-'''
-All functions should return only last_loss, last_w, unlike the labs where we
-kept track of all iterations in two arrays.
-
-TODO: FINAL submission needs to be according to the instructions in the project
-description.
-
-Nevertheless, we keep track of the intermediate w and losses for visualization
-purposes. 
-
-'''
 
 
 def sigmoid(x):
@@ -100,14 +89,15 @@ def least_squares_GD(y, tx, initial_w, max_iters, gamma, logging=False):
     Args:
         y: A numpy array representing the output variable.
         tx: A numpy array representing the transpose matrix of input variable X.
-        initial_w: A numpy array representing the weights of each feature.
+        initial_w: A numpy array representing the initial weights of each
+            feature.
         max_iters: An integer specifying the maximum number of iterations for
             convergence.
         gamma: A float number greater than 0 used as a learning rate.
         logging: A boolean to print logs or not.
 
     Returns:
-        A tuple with intermediate losses and weights respectively.
+        A tuple with last weight and loss respectively.
     """
     ws = [initial_w]
     losses = []
@@ -125,7 +115,20 @@ def least_squares_GD(y, tx, initial_w, max_iters, gamma, logging=False):
 
 
 def least_squares_SGD(y, tx, initial_w, max_iters, gamma, logging=False):
-    """Computes a least squares model using stochastic gradient descent."""
+    """Computes a least squares model using stochastic gradient descent.
+    Args:
+        y: A numpy array representing the output variable.
+        tx: A numpy array representing the transpose matrix of input variable X.
+        initial_w: A numpy array representing the initial weights of each
+            feature.
+        max_iters: An integer specifying the maximum number of iterations for
+            convergence.
+        gamma: A float number greater than 0 used as a learning rate.
+        logging: A boolean to print logs or not.
+
+    Returns:
+        A tuple with last weight and loss respectively.
+    """
     ws = [initial_w]
     losses = []
     w = initial_w
@@ -143,7 +146,14 @@ def least_squares_SGD(y, tx, initial_w, max_iters, gamma, logging=False):
 
 
 def least_squares(y, tx):
-    """Calculates the least squares using the normal equations."""
+    """Calculates the least squares using the normal equations.
+    
+    Args:
+        y: A numpy array representing the output variable.
+        tx: A numpy array representing the transpose matrix of input variable X.
+    Returns:
+        A tuple with last weight and loss respectively.
+    """
     a = tx.T @ tx
     b = tx.T @ y
     w = np.linalg.solve(a, b)
@@ -154,7 +164,13 @@ def least_squares(y, tx):
 def ridge_regression(y, tx, lambda_):
     """Computes rigde regression using normal equations.
 
-    The lambda_ parameter is the one used in the minimization formula.
+    Args:
+        y: A numpy array representing the output variable.
+        tx: A numpy array representing the transpose matrix of input variable X.
+        lambda_: A float representing the tradeoff parameter for L2-norm
+            regularization.
+    Returns:
+        A tuple with last weight and loss respectively.
     """
     lambda_prime = 2 * lambda_ * len(y)
     a = tx.T @ tx + (lambda_prime * np.identity(tx.shape[1]))
@@ -165,7 +181,20 @@ def ridge_regression(y, tx, lambda_):
 
 
 def logistic_regression(y, tx, initial_w, max_iters, gamma, logging=False):
-    """Computes logistic regression using gradient descent."""
+    """Computes logistic regression using gradient descent.
+    
+    Args:
+        y: A numpy array representing the output variable.
+        tx: A numpy array representing the transpose matrix of input variable X.
+        initial_w: A numpy array representing the initial weights of each
+            feature.
+        max_iters: An integer specifying the maximum number of iterations for
+            convergence.
+        gamma: A float number greater than 0 used as a learning rate.
+        logging: A boolean to print logs or not.
+    Returns:
+        A tuple with last weight and loss respectively.
+    """
     if len(y.shape) == 1:
         y = np.expand_dims(y, axis=1)
     if len(initial_w.shape) == 1:
@@ -204,6 +233,23 @@ def learning_by_penalized_gradient(y, tx, w, gamma, lambda_):
 
 
 def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma, logging=False):
+    """Computes L2-norm regularized logistic regression using gradient descent.
+    
+    Args:
+        y: A numpy array representing the output variable.
+        tx: A numpy array representing the transpose matrix of input variable X.
+        lambda_: A float representing the tradeoff parameter for L2-norm
+            regularization.
+        initial_w: A numpy array representing the initial weights of each
+            feature.
+        max_iters: An integer specifying the maximum number of iterations for
+            convergence.
+        gamma: A float number greater than 0 used as a learning rate.
+        logging: A boolean to print logs or not.
+    Returns:
+        A tuple with last weight and loss respectively.
+    """
+    # Transform column vectors with shape of the form (M,) to (M, 1)
     if len(y.shape) == 1:
         y = np.expand_dims(y, axis=1)
     if len(initial_w.shape) == 1:
@@ -437,7 +483,6 @@ def forward_selection(y, tx, K):
     n_col = tx.shape[1]
     indices = [[i, j] for i in range(n_col) for j in range(n_col) if j >= i]
     basis_acc = cross_validation(K, y, tx, 'lq')
-
     for idx in indices:
         augmented_tx = np.c_[tx, tx[:, idx[0]] * tx[:, idx[1]]]
         augmented_acc = (cross_validation(K, augmented_tx, y, 'lq'))
@@ -448,21 +493,20 @@ def forward_selection(y, tx, K):
 
 
 def find_best_params(y, tx, K, max_degree=13):
-    ''' Finds best degree and lambda given a certain dataset
-        Args:
-            tx: Data to polynomially expand and test.
-            y: Labels.
-            K: Number of folds used in the cross validation.
-            max_degree: Polynomial expansion threshold.
-        Returns: 
-            best_degree_lambda: Tuple consisting of (Best_degree,Best_lambda).
-    '''
+    """Finds best degree and lambda given a certain dataset
+    Args:
+        tx: Data to polynomially expand and test.
+        y: Labels.
+        K: Number of folds used in the cross validation.
+        max_degree: Polynomial expansion threshold.
+    Returns: 
+        best_degree_lambda: Tuple consisting of (Best_degree, Best_lambda).
+    """
     degrees = np.arange(1, max_degree+1)
     lambdas = np.logspace(-4, -2, 10)
     lambdas = np.append(lambdas, 0)
     acc = []
     ind = []
-
     for d in degrees:
         for l in lambdas:
             ind.append((d, l))
