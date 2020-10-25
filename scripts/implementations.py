@@ -388,6 +388,9 @@ def cross_validation(K, y, x, model, gamma=0.05, max_iters=1000, lambda_=0,
     Returns:
          A mean of the accuracies of the K different folds.
     """
+    if model == 'log_reg' or model == 'reg_log_reg'
+        # Make sure that the labels are 0 and 1 and not -1 and 1.
+        y = np.where(y == -1, 0, y)
     k_indices = build_k_indices(y, K, seed)
     accuracies = []  # nb of accuracies to compute = K
     ws = []
@@ -403,7 +406,7 @@ def cross_validation(K, y, x, model, gamma=0.05, max_iters=1000, lambda_=0,
                       max_iters=max_iters, lambda_=lambda_)
         if model == 'log_reg' or model == 'reg_log_reg':
             acc = np.mean(
-                predict_labels(w, x_te, threshold=0.5, logist=False,
+                predict_labels(w, x_te, threshold=0.5, logist=True,
                                negative_label=0, positive_label=1) == y_te)
             print(acc)
         else:
