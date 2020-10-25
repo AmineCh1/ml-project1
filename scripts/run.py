@@ -56,9 +56,9 @@ def main(recomp_params=False):
         degree_lambda_2 = find_best_params(y2, std_train2, 4)
         degree_lambda_3 = find_best_params(y3, std_train3, 4)
     else:
-        degree_lambda_0 = (12,0.0001668)
-        degree_lambda_1 = (12,0.0007742)
-        degree_lambda_2 = (12,0.0012915)
+        degree_lambda_0 = (11,0.0012915)
+        degree_lambda_1 = (12,0.0021544)
+        degree_lambda_2 = (13,0.0002782)
         degree_lambda_3 = (13,0.0007742)
         
     # Running ridge regression with found parameters
