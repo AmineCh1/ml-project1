@@ -467,31 +467,6 @@ def cross_validation(K, y, x, model, gamma=0.05, max_iters=1000, lambda_=0,
     return mu_acc
 
 
-def forward_selection(y, tx, K):
-    """Implements forward selection of the 2nd order.
-
-    Takes the product of two columns, appends it to tx and assesses whether the
-    resulting matrix is better for training our chosen model.
-
-    Args:
-        y: Labels to predict.
-        tx: Data to iteratively augment with interaction terms.
-        K: Number of folds used in the cross-validation.
-    Returns:
-        tx: Possibly augmented tx.
-    """
-    n_col = tx.shape[1]
-    indices = [[i, j] for i in range(n_col) for j in range(n_col) if j >= i]
-    basis_acc = cross_validation(K, y, tx, 'lq')
-    for idx in indices:
-        augmented_tx = np.c_[tx, tx[:, idx[0]] * tx[:, idx[1]]]
-        augmented_acc = (cross_validation(K, augmented_tx, y, 'lq'))
-        if augmented_acc > basis_acc:
-            basis_acc = augmented_acc
-            tx = augmented_tx
-    return tx
-
-
 def find_best_params(y, tx, K, max_degree=13):
     """Finds best degree and lambda given a certain dataset
     Args:
