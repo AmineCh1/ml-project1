@@ -1,5 +1,8 @@
 # Detecting the Higgs :b:oson (ML project 1)
 Here's a quick explanation on how to run the provided code.
+
+The results obtained can vary depending on the machine used to run the code.
+
 ## Prerequisites
 - The files ```run.py``` and ```implementations.py```should be located in the "scripts" folder.
 - The "data" folder should be located on the same level as the "scripts" folder.
