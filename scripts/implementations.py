@@ -270,13 +270,14 @@ def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma, logging
 ############################ ADDITIONAL FUNCTIONS #############################
 
 
-def partition_data(x, y, i):
+def partition_data(x, y, i, logging=False):
     """Partitions data according to given PRI_jet_num number.
 
     Args: 
         x: Data to partition.
         y: Labels to partition.
         i: PRI_jet_num number.
+        logging: Boolean if to print logs or not.
 
     Returns:
         index_i: Index of samples of data partition in original dataset.
@@ -309,7 +310,8 @@ def partition_data(x, y, i):
     # the non-NaN values of the columns
     indices = x_test[:, 0] == -999
     x_test[indices, 0] = np.mean(x_test[~indices, 0])
-    print("Final shape : {} ".format(x_test.shape))
+    if logging:
+        print("Final shape : {} ".format(x_test.shape))
     return index_i, y_i, x_test
 
 
